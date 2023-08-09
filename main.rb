@@ -3,19 +3,21 @@ require 'io/console'
 # configuration
 @debug_mode = false
 @size = 20
+@difficulty = 1 # 1-7 represents holes freequency (1 - easy, 7 - hard)
 
-@selected = [0, 0] # [y, x]
+@board = []
 @opened = []
+@selected = [0, 0] # [y, x]
 
 def main
   start
 
-  puts 'Press Y to restart or any other key to exit'
+  puts 'Press Y, Enter or Space to restart or any other key to exit'
   while key = read_char
     exit if key == "\u0003"
 
     case key
-    when "Y", "y"
+    when "Y", "y", "\r", " "
       main
     else
       exit
@@ -23,7 +25,13 @@ def main
   end
 end
 
+def reset_settings
+  @selected = [0, 0]
+  @opened = []
+end
+
 def start
+  reset_settings
   generate_board(@size)
   generate_holes
   calculate_holes
@@ -129,7 +137,7 @@ end
 def generate_holes
   @board.each_with_index do |row, y|
     row.each_with_index do |cell, x|
-      @board[y][x] = 'x' if rand(10) < 2
+      @board[y][x] = 'x' if rand(10) < @difficulty
     end
   end
 end
