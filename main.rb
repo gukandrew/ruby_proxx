@@ -1,3 +1,8 @@
+# frozen_string_literal: true
+
+# Description: Proxx like game implementation in Ruby
+# Author: Andrew Guk
+
 require 'io/console'
 
 # configuration
@@ -94,16 +99,8 @@ def render_board(force_show = false)
   system('clear')
 
   @board.each_with_index do |row, y|
-    if y == 0
-      printf("%6s", ' ')
-      row.length.times { |n| printf("%4s", n + 1) }
-
-      printf("\n%6s", ' ')
-      print sprintf("%4s", '-') * row.length
-      print("\n")
-    end
-
-    print printf("%4i |", y + 1)
+    render_first_line(row.length) if y == 0
+    render_first_column(y)
 
     row.each_with_index do |cell, x|
       render_cell(y, x, force_show)
@@ -111,7 +108,27 @@ def render_board(force_show = false)
 
     print "\n"
   end
-  print "\nTo round press Ctrl+C, to exit completly press that twice\n"
+  print "\nUse arrow keys to navigate and space/enter to open cell\n"
+  print "To exit round press Ctrl+C, to exit completly press that twice\n"
+end
+
+def render_first_line(width)
+  printf("%6s", ' ')
+  width.times { |n| printf("%4s", n + 1) }
+
+  printf("\n%6s", ' ')
+  print sprintf("%4s", '-') * width
+  print("\n")
+end
+
+def render_first_column(y)
+  print printf("%4i |", y + 1)
+end
+
+def render_cells(row, force_show = false)
+  row.each_with_index do |cell, x|
+    render_cell(y, x, force_show)
+  end
 end
 
 # for colors reference see: https://stackoverflow.com/a/16363159/10175256
@@ -152,36 +169,36 @@ def calculate_holes
   end
 end
 
-def update_nearest_cells(y, x, second_run = false)
+def update_nearest_cells(y, x, parent_cell = true)
   rows_n = @board.length - 1
 
   @board[y][x] += 1 if @board[y][x] != 'x'
 
-  return if second_run == true
+  return if parent_cell == false
 
   if y > 0 # up
-    update_nearest_cells(y - 1, x, true)
+    update_nearest_cells(y - 1, x, false)
   end
   if y < rows_n # down
-    update_nearest_cells(y + 1, x, true)
+    update_nearest_cells(y + 1, x, false)
   end
   if x > 0 # left
-    update_nearest_cells(y, x - 1, true)
+    update_nearest_cells(y, x - 1, false)
   end
   if x < rows_n # right
-    update_nearest_cells(y, x + 1, true)
+    update_nearest_cells(y, x + 1, false)
   end
   if y > 0 && x > 0 # up left
-    update_nearest_cells(y - 1, x - 1, true)
+    update_nearest_cells(y - 1, x - 1, false)
   end
   if y > 0 && x < rows_n # up right
-    update_nearest_cells(y - 1, x + 1, true)
+    update_nearest_cells(y - 1, x + 1, false)
   end
   if y < rows_n && x > 0 # down left
-    update_nearest_cells(y + 1, x - 1, true)
+    update_nearest_cells(y + 1, x - 1, false)
   end
   if y < rows_n && x < rows_n # down right
-    update_nearest_cells(y + 1, x + 1, true)
+    update_nearest_cells(y + 1, x + 1, false)
   end
 end
 
@@ -195,6 +212,10 @@ def check_cell
     open_zero_cells(y, x)
   end
 
+  open_cell(y, x)
+end
+
+def open_cell(y, x)
   @opened << [y,x]
 end
 
@@ -205,7 +226,7 @@ def open_zero_cells(y, x, previous_value = 0, processed = [])
 
   rows_n = @board.length - 1
 
-  @opened << [y,x]
+  open_cell(y, x)
   processed << [y,x]
 
   if y > 0 # up
