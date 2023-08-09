@@ -43,7 +43,7 @@ def start
       @selected[0] -= 1 if @selected[0] > 0
     when "\e[B" # down
       @selected[0] += 1 if @selected[0] < @board.length - 1
-    when "\r" # enter
+    when "\r", " " # enter or space
       round_ended = check_cell == 'x'
     end
 
@@ -144,32 +144,36 @@ def calculate_holes
   end
 end
 
-def update_nearest_cells(y, x)
+def update_nearest_cells(y, x, second_run = false)
   rows_n = @board.length - 1
 
-  if y > 0 && @board[y - 1][x] != 'x'
-    @board[y - 1][x] += 1
+  @board[y][x] += 1 if @board[y][x] != 'x'
+
+  return if second_run == true
+
+  if y > 0 # up
+    update_nearest_cells(y - 1, x, true)
   end
-  if y < rows_n && @board[y + 1][x] != 'x'
-    @board[y + 1][x] += 1
+  if y < rows_n # down
+    update_nearest_cells(y + 1, x, true)
   end
-  if x > 0 && @board[y][x - 1] != 'x'
-    @board[y][x - 1] += 1
+  if x > 0 # left
+    update_nearest_cells(y, x - 1, true)
   end
-  if x < rows_n && @board[y][x + 1] != 'x'
-    @board[y][x + 1] += 1
+  if x < rows_n # right
+    update_nearest_cells(y, x + 1, true)
   end
-  if y > 0 && x > 0 && @board[y - 1][x - 1] != 'x'
-    @board[y - 1][x - 1] += 1
+  if y > 0 && x > 0 # up left
+    update_nearest_cells(y - 1, x - 1, true)
   end
-  if y > 0 && x < rows_n && @board[y - 1][x + 1] != 'x'
-    @board[y - 1][x + 1] += 1
+  if y > 0 && x < rows_n # up right
+    update_nearest_cells(y - 1, x + 1, true)
   end
-  if y < rows_n && x > 0 && @board[y + 1][x - 1] != 'x'
-    @board[y + 1][x - 1] += 1
+  if y < rows_n && x > 0 # down left
+    update_nearest_cells(y + 1, x - 1, true)
   end
-  if y < rows_n && x < rows_n && @board[y + 1][x + 1] != 'x'
-    @board[y + 1][x + 1] += 1
+  if y < rows_n && x < rows_n # down right
+    update_nearest_cells(y + 1, x + 1, true)
   end
 end
 
@@ -186,35 +190,39 @@ def check_cell
   @opened << [y,x]
 end
 
-def open_zero_cells(y, x, processed = [])
+def open_zero_cells(y, x, previous_value = 0, processed = [])
+  value = @board[y][x]
+
+  return if @opened.include?([y,x]) || processed.include?([y,x]) || previous_value != 0
+
   rows_n = @board.length - 1
 
   @opened << [y,x]
   processed << [y,x]
 
-  if y > 0 && @board[y - 1][x] == 0 && !@opened.include?([y - 1, x]) && !processed.include?([y - 1, x])
-    open_zero_cells(y - 1, x, processed)
+  if y > 0 # up
+    open_zero_cells(y - 1, x, value, processed)
   end
-  if y < rows_n && @board[y + 1][x] == 0 && !@opened.include?([y + 1, x]) && !processed.include?([y + 1, x])
-    open_zero_cells(y + 1, x, processed)
+  if y < rows_n # down
+    open_zero_cells(y + 1, x, value, processed)
   end
-  if x > 0 && @board[y][x - 1] == 0 && !@opened.include?([y, x - 1]) && !processed.include?([y, x - 1])
-    open_zero_cells(y, x - 1, processed)
+  if x > 0 # left
+    open_zero_cells(y, x - 1, value, processed)
   end
-  if x < rows_n && @board[y][x + 1] == 0 && !@opened.include?([y, x + 1]) && !processed.include?([y, x + 1])
-    open_zero_cells(y, x + 1, processed)
+  if x < rows_n # right
+    open_zero_cells(y, x + 1, value, processed)
   end
-  if y > 0 && x > 0 && @board[y - 1][x - 1] == 0 && !@opened.include?([y - 1, x - 1]) && !processed.include?([y - 1, x - 1])
-    open_zero_cells(y - 1, x - 1, processed)
+  if y > 0 && x > 0 # up left
+    open_zero_cells(y - 1, x - 1, value, processed)
   end
-  if y > 0 && x < rows_n && @board[y - 1][x + 1] == 0 && !@opened.include?([y - 1, x + 1]) && !processed.include?([y - 1, x + 1])
-    open_zero_cells(y - 1, x + 1, processed)
+  if y > 0 && x < rows_n # up right
+    open_zero_cells(y - 1, x + 1, value, processed)
   end
-  if y < rows_n && x > 0 && @board[y + 1][x - 1] == 0 && !@opened.include?([y + 1, x - 1]) && !processed.include?([y + 1, x - 1])
-    open_zero_cells(y + 1, x - 1, processed)
+  if y < rows_n && x > 0 # down left
+    open_zero_cells(y + 1, x - 1, value, processed)
   end
-  if y < rows_n && x < rows_n && @board[y + 1][x + 1] == 0 && !@opened.include?([y + 1, x + 1]) && !processed.include?([y + 1, x + 1])
-    open_zero_cells(y + 1, x + 1, processed)
+  if y < rows_n && x < rows_n # down right
+    open_zero_cells(y + 1, x + 1, value, processed)
   end
 end
 
