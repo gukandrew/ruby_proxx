@@ -60,15 +60,22 @@ class Proxxlike
         round_ended = check_cell(@selected[0], @selected[1]) == 'x'
       end
 
-      if round_ended
+      render_board
 
+      if check_win
+        render_board(true)
+        puts 'You win!'
+        break
+      elsif round_ended
         render_board(true)
         puts 'You lose!'
         break
-      else
-        render_board
       end
     end
+  end
+
+  def check_win
+    @board.map { |row| row.count { |v| v != 'x' } }.sum == @opened.count
   end
 
   def generate_board(n)
@@ -97,7 +104,7 @@ class Proxxlike
   end
 
   def render_board(force_show = false)
-    system('clear')
+    system('clear') unless @debug_mode
 
     @board.each_with_index do |row, y|
       render_first_line(row.length) if y == 0
@@ -212,7 +219,7 @@ class Proxxlike
   end
 
   def open_cell(y, x)
-    @opened << [y,x]
+    @opened << [y,x] unless @opened.include?([y,x])
   end
 
   def open_zero_cells(y, x, previous_value = 0, processed = [])

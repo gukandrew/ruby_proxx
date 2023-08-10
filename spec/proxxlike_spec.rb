@@ -186,7 +186,7 @@ RSpec.describe Proxxlike do
     it 'start' do
       allow(subject).to receive(:read_char).and_return("\u0003")
 
-      expect(subject).to receive(:render_board).with(no_args)
+      expect(subject).to receive(:render_board).with(no_args).exactly(2).times
       expect(subject).to receive(:render_board).with(true)
 
       expect { subject.start }.to output(/You lose!/).to_stdout
